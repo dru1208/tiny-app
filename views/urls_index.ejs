@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Tiny App</title>
+  </head>
+  <body>
+    <h1><% include ./partials/_header %></h1>
+    <h2>Different URLs</h2>
+    <ul>
+      <% for (let url in urls) { %>
+      <li>
+        <form method="POST" action="/urls/<%= url %>/delete">
+          <%= urls[url] %> : <%= url %>
+          <a href="/urls/<%= url %>">Edit</a>
+          <button type="submit" name="deleter" value="<%= url %>">Delete</button>
+        </form>
+      </li>
+      <% } %>
+    </ul>
+    <a href=#>Click Here to Access the Shortener</a>
+  </body>
+</html>
