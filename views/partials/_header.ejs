@@ -4,5 +4,16 @@
   <title>Tiny App</title>
 </head>
 <body>
-  <h1>just a header for now</h1>
+  <h1>Welcome to Tiny App</h1>
+  <% if (username) {%>
+    <h2>Hello <%=username%></h2>
+    <form method="POST" action="/logout">
+      <button type="submit" name="logout">Logout</button>
+    </form>
+  <%} else if (!username) {%>
+    <form method="POST" action="/login">
+      <input type="text" name="username" style="width 250px">
+      <input type="submit" value="Login">
+    </form>
+  <%}%>
 </body>
