@@ -1,19 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <title>Tiny App</title>
-</head>
-<body>
-  <h1>Welcome to Tiny App</h1>
-  <% if (username) {%>
-    <h2>Hello <%=username%></h2>
+<header>
+  <div>Tiny URL App</div>
+  <% if (user) { %>
+    <h2>Hello <%= user.id %></h2>
     <form method="POST" action="/logout">
       <button type="submit" name="logout">Logout</button>
     </form>
-  <%} else if (!username) {%>
-    <form method="POST" action="/login">
-      <input type="text" name="username" style="width 250px">
-      <input type="submit" value="Login">
-    </form>
-  <%}%>
-</body>
+  <% } else { %>
+    <a href="/login">Login</a>
+    <a href="/register">Register</a>
+  <% } %>
+</header>

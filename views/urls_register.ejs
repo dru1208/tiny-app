@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+
+<html lang="en">
+
+  <head>
+    <title>Tiny App</title>
+  </head>
+
+  <body>
+    <h1>Register to enjoy all the perks of Tiny App!</h1>
+    <% if (user) {%>
+      <form method="POST" action="/logout">
+        <button type="submit" name="logout">Logout</button>
+      </form>
+    <% } %>
+    <form method="POST" action="/register">
+      <label>Email</label>
+      <input type="email" name="email" style="width 350px">
+      <label>Password</label>
+      <input type="password" name="password" style="width 350px">
+      <input type="submit" value="Register">
+    </form>
+  </body>
+
+</html>
