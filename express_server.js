@@ -89,11 +89,18 @@ app.get("/urls", (req, res) => {
 
 //form for adding a url to database
 app.get("/urls/new", (req, res) => {
-  let userId = req.cookies["user_id"]
-  let templateVars = {
-    user: users[userId]
+  if (req.cookies.user_id) {
+    let userId = req.cookies["user_id"]
+    let templateVars = {
+      user: users[userId]
+    }
+    res.render("urls_new", templateVars);
+  } else {
+    let templateVars = {
+      user: req.cookies.user_id
+    }
+    res.render("urls_login", templateVars)
   }
-  res.render("urls_new");
 });
 
 //fill this out
