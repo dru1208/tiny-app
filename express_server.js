@@ -4,6 +4,16 @@ const bcrypt = require('bcrypt');
 var PORT = 8080;
 const bodyParser = require("body-parser");
 var cookieParser = require('cookie-parser')
+var cookieSession = require('cookie-session')
+
+app.use(cookieSession({
+  name: 'session',
+  signed: false,
+  maxAge: 24 * 60 * 60 * 1000
+}))
+
+
+
 app.use(cookieParser())
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
@@ -95,16 +105,16 @@ app.get("/", function (req, res) {
 
 //page of accumulated urls
 app.get("/urls", (req, res) => {
-  if (!req.cookies.user_id) {
+  if (!req.session.user_id) {
     res.end("You should log in or register first")
   } else {
-  filteredDb = filteredDbFunc(req.cookies.user_id);
+  filteredDb = filteredDbFunc(req.session.user_id);
   for (var entry in urlDatabase) {
-    if (urlDatabase[entry].userId === req.cookies.user_id) {
+    if (urlDatabase[entry].userId === req.session.user_id) {
       filteredDb[entry] = urlDatabase[entry]
     }
   }
-  let userId = req.cookies.user_id
+  let userId = req.session.user_id
   let templateVars = {
     userId: userId,
     Db: filteredDb,
@@ -115,15 +125,15 @@ app.get("/urls", (req, res) => {
 
 //form for adding a url to database
 app.get("/urls/new", (req, res) => {
-  if (req.cookies.user_id) {
-    let userId = req.cookies["user_id"]
+  if (req.session.user_id) {
+    let userId = req.session["user_id"]
     let templateVars = {
       user: users[userId]
     }
     res.render("urls_new", templateVars);
   } else {
     let templateVars = {
-      user: req.cookies.user_id
+      user: req.session.user_id
     }
     res.render("urls_login", templateVars)
   }
@@ -137,12 +147,12 @@ app.get("/u/:shortURL", (req, res) => {
 
 //completion page of adding url (displays short and long url)
 app.get("/urls/:id/", (req, res) => {
-  if (!req.cookies.user_id) {
+  if (!req.session.user_id) {
     res.end("You should log in or register first")
-  } else if (urlDatabase[req.params.id].userId !== req.cookies.user_id) {
+  } else if (urlDatabase[req.params.id].userId !== req.session.user_id) {
     res.end("This URL link is not in your account!")
   } else {
-  let userId = req.cookies.user_id
+  let userId = req.session.user_id
   let templateVars = {shortURL: req.params.id,
                       longURL: urlDatabase[req.params.id].url,
                       user: users[userId]
@@ -162,21 +172,21 @@ app.get("/hello", (req, res) => {
 
 app.get("/register", (req, res) => {
   let templateVars = {
-    user: req.cookies.user_id
+    user: req.session.user_id
   }
   res.render("urls_register", templateVars);
 })
 
 app.get("/login", (req, res) => {
   let templateVars = {
-    user: req.cookies.user_id
+    user: req.session.user_id
   }
   res.render("urls_login", templateVars)
 })
 
 
 app.post("/urls/:id/update", (req, res) => {
-  if (req.cookies["user_id"] === urlDatabase[req.params.id].userId){
+  if (req.session["user_id"] === urlDatabase[req.params.id].userId){
     urlDatabase[req.body.shortURL].url = req.body.longURL
     res.redirect("/urls");
   } else {
@@ -192,7 +202,7 @@ app.post("/urls/:id/delete", (req, res) => {
 //generates a random short url when a long URL is inputted, might need to look into urlDatabase update
 app.post("/urls", (req, res) => {
   var newShortURL = generateRandomString(); //6 random alphanumeric values
-  urlDatabase[newShortURL] = {url: req.body[Object.keys(req.body)[0]], userId: req.cookies.user_id};
+  urlDatabase[newShortURL] = {url: req.body[Object.keys(req.body)[0]], userId: req.session.user_id};
   res.redirect(`/urls/${newShortURL}`)
 });
 
@@ -200,7 +210,7 @@ app.post("/login", (req, res) => {
   var email = req.body.email
   var password = req.body.password
   if (compareEmailToUsers(email) && comparePasswordToUsers(password)) {
-    res.cookie("user_id", findID(email))
+    req.session.user_id = findID(email)
     res.redirect("/urls")
   } else if (comparePasswordToUsers(req.body.password) || compareEmailToUsers(req.body.email)) {
     res.sendStatus(400)
@@ -211,7 +221,7 @@ app.post("/login", (req, res) => {
 
 //logs out and clears the cookie that saves login info
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id")
+  req.session = null
   res.redirect("/urls")
 });
 
@@ -228,7 +238,7 @@ app.post("/register", (req, res) => {
     email: req.body.email,
     password: bcrypt.hashSync(req.body.password, 10)
   };
-  res.cookie("user_id", newId);
+  req.session.user_id = newId;
   res.redirect("/urls");
   console.log(users);
   }
