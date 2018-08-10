@@ -34,6 +34,14 @@ const users = {
     password: "keto4lyfe"
   }
 }
+function filteredDbFunc (id) {
+  let filteredDb = {}
+  for (var entry in urlDatabase) {
+    if (urlDatabase[entry].userId === id) {
+      filteredDb[entry] = urlDatabase[entry]
+    }
+  } return filteredDb
+};
 
 function compareEmailToUsers (inputEmail) {
   for (let user in users) {
@@ -69,8 +77,14 @@ function findID (email) {
 }
 
 var urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": {
+    url: "http://www.lighthouselabs.ca",
+    userId: "dru"
+  },
+  "9sm5xK": {
+    url: "http://www.google.com",
+    userId: "veely"
+  }
 };
 
 
@@ -80,11 +94,22 @@ app.get("/", function (req, res) {
 
 //page of accumulated urls
 app.get("/urls", (req, res) => {
-  let userId = req.cookies["user_id"]
+  if (!req.cookies.user_id) {
+    res.end("You should log in or register first")
+  } else {
+  filteredDb = filteredDbFunc(req.cookies.user_id);
+  for (var entry in urlDatabase) {
+    if (urlDatabase[entry].userId === req.cookies.user_id) {
+      filteredDb[entry] = urlDatabase[entry]
+    }
+  }
+  let userId = req.cookies.user_id
   let templateVars = {
-    urls: urlDatabase,
+    userId: userId,
+    Db: filteredDb,
     user: users[userId]};
   res.render("urls_index", templateVars);
+  }
 });
 
 //form for adding a url to database
@@ -105,20 +130,27 @@ app.get("/urls/new", (req, res) => {
 
 //fill this out
 app.get("/u/:shortURL", (req, res) => {
-  let longURL = urlDatabase[req.params.shortURL];
+  let longURL = urlDatabase[req.params.shortURL].url;
   res.redirect(longURL);
 });
 
 //completion page of adding url (displays short and long url)
 app.get("/urls/:id/", (req, res) => {
+  if (!req.cookies.user_id) {
+    res.end("You should log in or register first")
+  } else if (urlDatabase[req.params.id].userId !== req.cookies.user_id) {
+    res.end("This URL link is not in your account!")
+  } else {
   let userId = req.cookies.user_id
   let templateVars = {shortURL: req.params.id,
-                      longURL: urlDatabase[req.params.id],
+                      longURL: urlDatabase[req.params.id].url,
                       user: users[userId]
                       };
   res.render("urls_show", templateVars);
+  }
 });
 
+//may need to update this with the new definition of URL database
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
@@ -143,8 +175,12 @@ app.get("/login", (req, res) => {
 
 
 app.post("/urls/:id/update", (req, res) => {
-  urlDatabase[req.body.shortURL] = req.body.longURL
-  res.redirect("/urls");
+  if (req.cookies["user_id"] === urlDatabase[req.params.id].userId){
+    urlDatabase[req.body.shortURL].url = req.body.longURL
+    res.redirect("/urls");
+  } else {
+    res.sendStatus(403);
+  }
 });
 
 app.post("/urls/:id/delete", (req, res) => {
@@ -152,10 +188,10 @@ app.post("/urls/:id/delete", (req, res) => {
   res.redirect("/urls");
 });
 
-//generates a random short url when a long URL is inputted
+//generates a random short url when a long URL is inputted, might need to look into urlDatabase update
 app.post("/urls", (req, res) => {
   var newShortURL = generateRandomString(); //6 random alphanumeric values
-  urlDatabase[newShortURL] = req.body[Object.keys(req.body)[0]];
+  urlDatabase[newShortURL] = {url: req.body[Object.keys(req.body)[0]], userId: req.cookies.user_id};
   res.redirect(`/urls/${newShortURL}`)
 });
 

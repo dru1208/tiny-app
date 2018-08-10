@@ -7,12 +7,12 @@
     <%- include ./partials/_header %>
     <h2>Different URLs</h2>
     <ul>
-      <% for (let url in urls) { %>
+      <% for (let shortUrl in Db) { %>
       <li>
-        <form method="POST" action="/urls/<%= url %>/delete">
-          <%= urls[url] %> : <%= url %>
-          <a href="/urls/<%= url %>">Edit</a>
-          <button type="submit" name="deleter" value="<%= url %>">Delete</button>
+        <form method="POST" action="/urls/<%= shortUrl %>/delete">
+          <%= Db[shortUrl].url %> : <%= shortUrl %>
+          <a href="/urls/<%= shortUrl %>">Edit</a>
+          <button type="submit" name="deleter" value="<%= shortUrl %>">Delete</button>
         </form>
       </li>
       <% } %>
